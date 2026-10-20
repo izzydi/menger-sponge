@@ -149,6 +149,16 @@ input[type=range]{width:100%;accent-color:var(--pink)}
 .mini-row{display:flex;justify-content:space-between;gap:8px;color:var(--muted);font-size:13px}
 .callout{padding:12px 16px;border-top:2px solid #e2ecfb;background:#fff9df;font-size:15px}
 
+/* Πλοήγηση ανάμεσα στα εργαστήρια */
+.lab-nav{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 12px;font-size:15px}
+.lab-nav a,.lab-pager a{text-decoration:none;font-weight:700;color:var(--blue);background:#fff;border:2.5px solid #cfe0f7;border-radius:10px 13px 11px 14px;padding:3px 12px}
+.lab-nav a:hover,.lab-pager a:hover{background:#eef5ff}
+.lab-nav a:focus-visible,.lab-pager a:focus-visible{outline:3px solid var(--pink);outline-offset:3px}
+.lab-nav span{color:var(--muted);font-weight:600}
+.lab-pager{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:18px;font-size:16px}
+.lab-pager a{padding:8px 14px}
+.lab-pager .next-lab{margin-left:auto}
+
 /* Κάτω λωρίδα */
 .next{margin-top:26px;display:flex;align-items:center;gap:14px;background:#f1ecff;border:3px solid var(--purple);border-radius:14px 20px 16px 18px;padding:10px 16px}
 .next .go{flex:none;display:grid;place-items:center;width:46px;height:38px;background:#ffe35c;border:2.5px solid #d4a800;border-radius:9px 12px 10px 13px;font-size:22px}
@@ -170,6 +180,8 @@ footer{text-align:center;color:var(--muted);font-size:14px;margin-top:22px}
 }
 </style></head>
 <body><main class="sheet">
+<nav class="lab-nav" aria-label="Fractal Lab"><a href="https://izzydi.github.io/fractal-lab/">← Όλα τα εργαστήρια</a><span>Fractal Lab | Εργαστήριο 2</span></nav>
+
 
 <header class="sheet-head">
   <div class="title-card">
@@ -302,6 +314,8 @@ footer{text-align:center;color:var(--muted);font-size:14px;margin-top:22px}
 </section>
 
 <div class="next"><span class="go" aria-hidden="true">➜</span><p><b>Πρόκληση:</b> Πόσα κυβάκια θα είχε το επίπεδο 4; Υπολόγισέ το με το χέρι και μετά σκέψου γιατί η σελίδα σταματά στο επίπεδο 3.</p></div>
+
+<nav class="lab-pager" aria-label="Άλλα εργαστήρια"><a href="https://izzydi.github.io/koch-fractal/">← Προηγούμενο: Χιονονιφάδα Koch</a><a class="next-lab" href="https://izzydi.github.io/fractal-lab/">Όλα τα εργαστήρια</a></nav>
 
 <footer>Εκπαιδευτικό εργαστήριο για fractals, γεωμετρία και υπολογιστική σκέψη. Δεν χρειάζεται λογαριασμός.</footer>
 </main>

@@ -2,6 +2,8 @@
 
 **[▶ Open the live lab](https://izzydi.github.io/menger-sponge/)**
 
+Lab 2 of **[Fractal Lab](https://izzydi.github.io/fractal-lab/)**. Previous: [Koch snowflake](https://izzydi.github.io/koch-fractal/).
+
 <img src="figures/menger_level3.png" width="240" align="right" alt="Menger sponge, recursion level 3, rendered in the page's 3D view">
 
 An interactive maths and Python lab for Greek lower-secondary (Gymnasium) students, designed for a single lesson. It follows on from [the Koch snowflake lab](https://izzydi.github.io/koch-fractal/): students read a commented Python program that builds the Menger sponge, change the level and colour, run the code in the browser and turn the result around in 3D. No installation or account is needed.
