@@ -1,0 +1,486 @@
+<!doctype html>
+<html lang="el"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><title>Εργαστήριο Fractals · Σφουγγάρι Menger</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playpen+Sans:wght@400..800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<style>
+:root{
+  --ink:#1f2a5c;--muted:#4b5682;--paper:#ffffff;--grid:#e6eefa;
+  --red:#e0313b;--blue:#2c6fd6;--pink:#e2508c;--green:#3f9d58;--purple:#8a5cf0;--orange:#f08a1c;--teal:#1f9aa8;
+  --hl-yellow:#fff27a;--hl-green:#c9f4c0;--hl-pink:#ffd3e4;--hl-blue:#cfe6ff;--hl-orange:#ffe1b8;--hl-purple:#e8dcff;
+  --hand:'Playpen Sans','Comic Sans MS','Segoe Print',cursive;
+  --wobble:18px 26px 20px 24px / 24px 18px 26px 20px;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;color:var(--ink);font:400 17px/1.6 var(--hand);
+  background-color:var(--paper);
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:26px 26px}
+button,input,textarea{font:inherit}
+button{cursor:pointer}
+button:focus-visible,input:focus-visible,textarea:focus-visible,a:focus-visible,canvas:focus-visible{outline:3px solid var(--pink);outline-offset:3px}
+.sheet{max-width:1180px;margin:0 auto;padding:22px 18px 40px}
+
+/* Επικεφαλίδα φύλλου εργασίας */
+.sheet-head{display:grid;grid-template-columns:1fr auto;gap:14px;align-items:stretch}
+.title-card{background:#fffbe8;border:3px solid var(--orange);border-radius:var(--wobble);padding:14px 22px}
+.title-card h1{margin:0;font-size:clamp(28px,4.2vw,46px);line-height:1.15;font-weight:800;letter-spacing:-.5px}
+.title-card h1 .t1{color:var(--red)}.title-card h1 .t2{color:var(--blue)}
+.title-card p{margin:6px 0 0;font-size:clamp(16px,2vw,21px);font-weight:600}
+.brand-card{background:#fff;border:3px solid var(--red);border-radius:16px 22px 18px 20px / 20px 16px 22px 18px;padding:10px 18px;text-align:center;display:flex;flex-direction:column;justify-content:center;min-width:200px}
+.brand-card strong{color:var(--red);font-size:28px;line-height:1.1;font-weight:800}
+.brand-card span{font-size:14px;line-height:1.35}
+.brand-card em{font-style:normal;color:var(--blue);font-weight:700;border-top:2px solid var(--red);margin-top:6px;padding-top:4px;font-size:14px}
+
+/* Ενότητες με αριθμημένο «αυτάκι» */
+.block{position:relative;background:var(--paper);border:3px solid var(--c,var(--pink));border-radius:var(--wobble);padding:0 22px 22px;margin-top:40px}
+.tab{position:relative;top:-24px;margin:0 0 -8px -6px;max-width:calc(100% + 6px);display:inline-flex;align-items:center;gap:10px;background:var(--tab,#ffe6ef);border:3px solid var(--c,var(--pink));border-radius:14px 20px 16px 18px;padding:2px 18px 2px 4px}
+.tab .num{display:grid;place-items:center;flex:none;width:40px;height:40px;border-radius:50%;background:var(--c,var(--pink));color:#fff;font-weight:800;font-size:22px;border:3px solid #fff;margin:-8px 0 -8px -12px;box-shadow:0 0 0 3px var(--c,var(--pink))}
+.tab h2{margin:0;font-size:clamp(21px,2.6vw,29px);font-weight:800;line-height:1.3}
+.b-pink{--c:var(--pink);--tab:#ffe6ef}.b-green{--c:var(--green);--tab:#e3f7e4}.b-blue{--c:var(--blue);--tab:#e2eeff}.b-purple{--c:var(--purple);--tab:#efe6ff}.b-orange{--c:var(--orange);--tab:#fff0dc}
+
+/* Μαρκαδόροι υπογράμμισης */
+.hl{padding:0 .18em;border-radius:3px;-webkit-box-decoration-break:clone;box-decoration-break:clone}
+.hl.y{background:linear-gradient(transparent 12%,var(--hl-yellow) 12% 90%,transparent 90%)}
+.hl.g{background:linear-gradient(transparent 12%,var(--hl-green) 12% 90%,transparent 90%)}
+.hl.p{background:linear-gradient(transparent 12%,var(--hl-pink) 12% 90%,transparent 90%)}
+.hl.b{background:linear-gradient(transparent 12%,var(--hl-blue) 12% 90%,transparent 90%)}
+.hl.o{background:linear-gradient(transparent 12%,var(--hl-orange) 12% 90%,transparent 90%)}
+.hl.v{background:linear-gradient(transparent 12%,var(--hl-purple) 12% 90%,transparent 90%)}
+code{font-family:Consolas,'Courier New',monospace;font-size:.92em;background:#f2f0ff;color:#5b3fb8;border-radius:5px;padding:1px 5px}
+
+/* Ενότητα 1 */
+.intro{display:grid;grid-template-columns:1.25fr .75fr;gap:22px;align-items:start}
+.intro p{margin:0 0 12px}
+.figure{position:relative;padding-top:6px}
+.note{background:#ecfbe8;border:2px solid var(--green);border-radius:12px 16px 14px 18px;padding:8px 12px;font-size:14.5px;line-height:1.4;transform:rotate(-1.5deg);max-width:260px;margin-left:auto}
+.arrow{display:block;width:90px;height:46px;margin:-2px 0 -10px 40px}
+.iso-box{border:2px dashed #b9c8e6;border-radius:16px;background:#f8fbff;max-width:340px;margin:0 auto;padding:12px}
+.iso-box svg{display:block;width:100%;height:auto}
+.goals{margin-top:6px;border:2.5px dashed var(--purple);border-radius:14px 18px 16px 20px;background:#faf7ff;padding:12px 16px}
+.goals h3{margin:0 0 6px;color:var(--purple);font-size:20px}
+.goals ol{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.goals li{display:flex;gap:10px;align-items:baseline;font-size:15.5px;line-height:1.45}
+.goals li b{flex:none;color:var(--red);border:2px solid var(--red);border-radius:6px;padding:0 6px;font-size:14px;background:#fff}
+
+/* Ενότητα 2: βασικές ιδέες */
+.chips{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px}
+.chip{border:2.5px solid var(--cc);background:var(--cb);border-radius:10px 14px 12px 15px;padding:8px 10px;font-size:19px;font-weight:600;text-align:center;line-height:1.3}
+.chip small{display:block;font-size:13.5px;font-weight:500;color:var(--muted)}
+.c1{--cc:#f0a0b8;--cb:#ffeef4}.c2{--cc:#8fbbea;--cb:#eaf4ff}.c3{--cc:#b49be8;--cb:#f2ecff}.c4{--cc:#8fd09b;--cb:#ecfaee}.c5{--cc:#f3b46b;--cb:#fff4e6}.c6{--cc:#7fcbd3;--cb:#e8f9fb}
+
+/* Ενότητα 3: βήματα A/B/C */
+.steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.step{border:2.5px solid var(--sc);border-radius:16px 20px 14px 18px;padding:12px 14px 14px;background:#fff}
+.step-head{display:flex;gap:10px;align-items:center;margin-bottom:6px}
+.letter{flex:none;display:grid;place-items:center;width:38px;height:38px;border-radius:50%;background:var(--sc);color:#fff;font-weight:800;font-size:20px}
+.step-head h3{margin:0;font-size:19px;line-height:1.25;background:var(--sh);border:2px solid var(--sc);border-radius:10px;padding:3px 10px}
+.step p{margin:6px 0 0;font-size:15.5px;line-height:1.5}
+.step .iso{display:block;width:100%;height:150px;margin:4px 0}
+.sA{--sc:var(--red);--sh:#ffeceb}.sB{--sc:var(--pink);--sh:#ffeaf2}.sC{--sc:var(--orange);--sh:#fff2df}
+
+/* Ενότητα 4: μαθηματικά */
+.math-lead{margin:0 0 14px}
+.math-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.math-item{border:2.5px solid var(--mc);border-radius:16px 20px 15px 19px;padding:14px 16px;background:#fff}
+.math-item h3{margin:0 0 6px;font-size:19px;line-height:1.3}
+.math-item h3 .q{display:inline-grid;place-items:center;width:30px;height:30px;border-radius:50%;background:var(--mc);color:#fff;font-size:16px;margin-right:6px;vertical-align:1px}
+.math-item p{margin:6px 0;font-size:15.5px;line-height:1.5}
+.fbox{display:table;margin:8px auto;padding:6px 18px;border:2.5px solid var(--fc,#f2c94c);background:var(--fb,#fff8d6);border-radius:10px 13px 11px 14px;font-weight:700;font-size:20px;text-align:center;line-height:1.5}
+.fbox.blue{--fc:#8fbbea;--fb:#eaf4ff}.fbox.pink{--fc:#f0a0b8;--fb:#ffeef4}.fbox.green{--fc:#8fd09b;--fb:#ecfaee}
+.m1{--mc:#e0313b}.m2{--mc:#2c6fd6}.m3{--mc:#3f9d58}.m4{--mc:#8a5cf0}.m5{--mc:#f08a1c}.m6{--mc:#1f9aa8}
+.table{display:grid;grid-template-columns:auto auto auto;gap:2px 16px;justify-content:center;margin:8px 0;font-size:15.5px}
+.table span:nth-child(3n+1){font-weight:600}
+.table span:nth-child(3n+2),.table span:nth-child(3n){font-weight:800;color:var(--blue)}
+.table .th{color:var(--muted)!important;font-weight:600!important;font-size:13.5px}
+.mini-cube{display:block;margin:6px auto;width:150px;height:auto}
+.answer{display:table;margin:18px auto 0;border:3px solid var(--red);background:#fff2f3;border-radius:14px 18px 15px 19px;padding:8px 22px;color:var(--red);font-size:clamp(18px,2.3vw,24px);font-weight:800;text-align:center;line-height:1.4}
+.answer span{color:var(--ink);font-weight:600}
+.bridge{margin-top:16px;border:2.5px solid var(--teal);background:#e9f8fa;border-radius:14px 18px 15px 19px;padding:12px 16px;font-size:15.5px}
+.bridge strong{color:var(--teal)}
+.bridge p{margin:4px 0 0}
+
+/* Ενότητα 5: εργαστήριο */
+.lab-guide{margin:0 0 14px;font-size:15.5px}
+.workspace{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.panel{min-width:0;border:2.5px solid var(--pc);border-radius:16px 20px 15px 19px;background:#fff;overflow:hidden}
+.panel-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;padding:10px 16px;background:var(--ph);border-bottom:2.5px solid var(--pc)}
+.panel-head h3{margin:0;font-size:20px}
+.panel-head p{margin:0;font-size:13.5px;color:var(--muted)}
+.tag{display:inline-block;border:2px solid var(--pc);background:#fff;border-radius:8px;padding:0 10px;font-size:14px;font-weight:700}
+.p-code{--pc:var(--purple);--ph:#f3edff}.p-draw{--pc:var(--blue);--ph:#eaf2ff}
+
+/* Επεξεργάσιμος κώδικας με χρωματισμό σύνταξης, όπως σε IDE. */
+.editor-wrap{position:relative;height:510px;background:#fdfdff;overflow:hidden;border-bottom:2px solid #ece6fb}
+.editor-wrap::before{content:"";position:absolute;top:0;bottom:0;left:10px;width:2px;background:#ffc6d4;z-index:0}
+.editor-wrap .editor,.editor-highlight{position:absolute;inset:0;width:100%;height:100%;margin:0;padding:20px 20px 20px 24px;border:0;font:14px/1.65 Consolas,'Courier New',monospace;tab-size:4;white-space:pre;overflow:auto;box-sizing:border-box}
+.editor-wrap .editor{background:transparent;color:transparent;-webkit-text-fill-color:transparent;caret-color:var(--ink);resize:none;z-index:2;overflow:auto;outline:none}
+.editor-wrap .editor:focus-visible{box-shadow:inset 0 0 0 3px var(--pink)}
+.editor-wrap .editor::selection{background:rgba(44,111,214,.22);-webkit-text-fill-color:transparent}
+.editor-highlight{z-index:1;color:var(--ink);pointer-events:none;scrollbar-width:none;background:transparent}
+.editor-highlight::-webkit-scrollbar{display:none}
+.editor-wrap #highlightCode{display:block;font:inherit;line-height:inherit;letter-spacing:inherit;white-space:inherit;tab-size:inherit;word-spacing:inherit;background:none;color:inherit;padding:0;border-radius:0}
+.editor-wrap .editor,.editor-wrap .editor-highlight,.editor-wrap #highlightCode{font-family:Consolas,'Courier New',monospace;font-size:14px;font-weight:400;line-height:23.1px;letter-spacing:0;word-spacing:0;font-variant-ligatures:none}
+.editor-wrap .editor,.editor-wrap .editor-highlight{overflow-wrap:normal;word-break:normal;text-align:left}
+.py-comment{color:#2f8a4e}.py-keyword{color:#8e3fc4;font-weight:700}.py-string{color:#c4372f}.py-number{color:#d4690f}.py-function{color:#1f64c8}.py-builtin{color:#0f8a8f}.py-operator{color:var(--ink)}
+
+.actions{padding:12px 16px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.actions button,.view-actions button{font-size:15px}
+.primary{background:var(--purple);color:#fff;border:2.5px solid #5d3bb8;border-radius:12px 15px 12px 14px;padding:7px 14px;font-weight:800;box-shadow:0 3px 0 #5d3bb8}
+.primary:hover{background:#7748e0}.primary:active{transform:translateY(2px);box-shadow:0 1px 0 #5d3bb8}
+.primary:disabled{opacity:.6;cursor:wait}
+.secondary{background:#fff;color:var(--ink);border:2.5px solid #c9bdf0;border-radius:12px 14px 12px 15px;padding:6px 11px;font-weight:700}
+.secondary:hover{background:#f6f2ff}
+.status{color:var(--muted);font-size:14px;padding:0 16px 14px;min-height:32px}
+.status.error{color:#b3262f}.status.ok{color:#2c7a43}
+.viewer{position:relative;height:380px;background:#fff;
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:20px 20px}
+.viewer canvas{display:block;width:100%;height:100%;touch-action:none;cursor:grab}
+.viewer canvas:active{cursor:grabbing}
+.viewer .hint{position:absolute;left:10px;bottom:8px;background:#ffffffd9;border:2px solid #cfe0f7;border-radius:9px;padding:1px 9px;font-size:13px;color:var(--muted);pointer-events:none}
+.viewer .fallback{position:absolute;inset:0;display:none;align-items:center;justify-content:center;text-align:center;padding:20px;font-size:15px;color:var(--muted)}
+.viewer.no-3d .fallback{display:flex}.viewer.no-3d canvas,.viewer.no-3d .hint{display:none}
+.view-actions{display:flex;gap:8px;flex-wrap:wrap;padding:10px 16px 0}
+.controls{padding:12px 16px 14px;display:grid;gap:8px}
+.range-label{display:flex;justify-content:space-between;gap:10px;font-weight:700;font-size:16px}
+.range-label strong{display:inline-grid;place-items:center;min-width:34px;height:30px;border:2.5px solid var(--blue);border-radius:9px;color:var(--blue)}
+input[type=range]{width:100%;accent-color:var(--pink)}
+.mini-row{display:flex;justify-content:space-between;gap:8px;color:var(--muted);font-size:13px}
+.callout{padding:12px 16px;border-top:2px solid #e2ecfb;background:#fff9df;font-size:15px}
+
+/* Κάτω λωρίδα */
+.next{margin-top:26px;display:flex;align-items:center;gap:14px;background:#f1ecff;border:3px solid var(--purple);border-radius:14px 20px 16px 18px;padding:10px 16px}
+.next .go{flex:none;display:grid;place-items:center;width:46px;height:38px;background:#ffe35c;border:2.5px solid #d4a800;border-radius:9px 12px 10px 13px;font-size:22px}
+.next p{margin:0;font-size:clamp(16px,2vw,19px);font-weight:600}
+.next p b{color:var(--red)}
+footer{text-align:center;color:var(--muted);font-size:14px;margin-top:22px}
+
+@media(max-width:850px){
+  .sheet-head,.intro,.workspace,.math-grid{grid-template-columns:1fr}
+  .steps{grid-template-columns:1fr}
+  .chips{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .brand-card{min-width:0}
+  .note{margin:0 auto}
+  .editor-wrap{height:340px}
+  .viewer{height:320px}
+  .block{padding:0 14px 16px}
+  .tab{padding-right:12px}
+  .tab h2{font-size:20px}
+}
+</style></head>
+<body><main class="sheet">
+
+<header class="sheet-head">
+  <div class="title-card">
+    <h1><span class="t1">Εργαστήριο Fractals –</span> <span class="t2">Σφουγγάρι Menger</span></h1>
+    <p>Χτίζω ένα τρισδιάστατο fractal με Python, βήμα-βήμα | 1 διδακτική ώρα</p>
+  </div>
+  <aside class="brand-card" aria-label="Fractal Lab">
+    <strong>Fractal Lab</strong>
+    <span>Μαθηματικά &amp; Python<br>για το Γυμνάσιο</span>
+    <em>Χωρίς λογαριασμό</em>
+  </aside>
+</header>
+
+<section class="block b-pink" aria-labelledby="s1">
+  <div class="tab"><span class="num">1</span><h2 id="s1">Ένα fractal στις τρεις διαστάσεις</h2></div>
+  <div class="intro">
+    <div>
+      <p>Ένα <strong>fractal</strong> έχει <span class="hl y">λεπτομέρειες σε κάθε κλίμακα</span>: όσο κι αν «ζουμάρεις», βρίσκεις ξανά το ίδιο μοτίβο. Αυτό λέγεται <span class="hl p">αυτοομοιότητα</span>. Στη χιονονιφάδα Koch το μοτίβο ήταν μια μικρή «μύτη» πάνω σε μια γραμμή. Εδώ το μοτίβο είναι ένας <span class="hl b">κύβος με τρύπες</span>.</p>
+      <p>Το <span class="hl o">1926</span>, ο Αυστριακός μαθηματικός <strong>Καρλ Μένγκερ (Karl Menger)</strong> περιέγραψε ένα σχήμα που φτιάχνεται αν πάρεις έναν κύβο, τον χωρίσεις σε <span class="hl g">27 κυβάκια</span> και αφαιρέσεις τα <span class="hl g">7 του κέντρου</span>. Μετά κάνεις το ίδιο σε κάθε κυβάκι που έμεινε, ξανά και ξανά.</p>
+      <p>Το αποτέλεσμα είναι το <strong>σφουγγάρι Menger</strong>. Έχει ένα παράξενο χαρακτηριστικό: σε κάθε βήμα <span class="hl v">ο όγκος του μικραίνει</span>, ενώ οι τρύπες και οι επιφάνειές του πληθαίνουν.</p>
+      <div class="goals">
+        <h3>Στόχοι του μαθήματος</h3>
+        <ol>
+          <li><b>Σ1</b><span>Να περιγράφεις πώς χτίζεται το σφουγγάρι Menger βήμα-βήμα.</span></li>
+          <li><b>Σ2</b><span>Να υπολογίζεις πόσα κυβάκια έχει κάθε επίπεδο (1, 20, 400, …).</span></li>
+          <li><b>Σ3</b><span>Να υπολογίζεις με κλάσματα πόσος όγκος μένει σε κάθε βήμα.</span></li>
+          <li><b>Σ4</b><span>Να διαβάζεις και να αλλάζεις κώδικα Python με εμφωλευμένα <code>for</code> και αναδρομή.</span></li>
+        </ol>
+      </div>
+    </div>
+    <div class="figure">
+      <p class="note">Κοίτα μέσα σε μια τρύπα: θα δεις μικρότερα σφουγγάρια!</p>
+      <svg class="arrow" viewBox="0 0 90 46" aria-hidden="true"><path d="M70 4 C 60 30, 30 36, 12 38" fill="none" stroke="#3f9d58" stroke-width="2.5" stroke-linecap="round"/><path d="M22 30 L11 38.5 L24 43" fill="none" stroke="#3f9d58" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <div class="iso-box"><svg id="iso-hero" role="img" aria-label="Σφουγγάρι Menger, επίπεδο 2"></svg></div>
+    </div>
+  </div>
+</section>
+
+<section class="block b-green" aria-labelledby="s2">
+  <div class="tab"><span class="num">2</span><h2 id="s2">Βασικές ιδέες</h2></div>
+  <div class="chips">
+    <div class="chip c1">Αρχή<small>ένας κύβος</small></div>
+    <div class="chip c2">÷ 3<small>κάθε ακμή σε 3 ίσα</small></div>
+    <div class="chip c3">3 × 3 × 3 = 27<small>μικρά κυβάκια</small></div>
+    <div class="chip c4">27 − 7 = 20<small>βγάζουμε το κέντρο</small></div>
+    <div class="chip c5">× 20<small>κυβάκια σε κάθε επίπεδο</small></div>
+    <div class="chip c6">LEVEL 0–3<small>πόσες επαναλήψεις</small></div>
+  </div>
+</section>
+
+<section class="block b-blue" aria-labelledby="s3">
+  <div class="tab"><span class="num">3</span><h2 id="s3">Πώς χτίζεται το σφουγγάρι</h2></div>
+  <div class="steps">
+    <article class="step sA">
+      <div class="step-head"><span class="letter">A</span><h3>Ξεκίνα με κύβο</h3></div>
+      <svg class="iso" id="iso-a" role="img" aria-label="Ένας κύβος"></svg>
+      <p>Πάρε έναν <span class="hl y">κύβο</span>. Αυτό είναι το επίπεδο 0: ένα μόνο κομμάτι.</p>
+    </article>
+    <article class="step sB">
+      <div class="step-head"><span class="letter">B</span><h3>Χώρισε και αφαίρεσε</h3></div>
+      <svg class="iso" id="iso-b" role="img" aria-label="Σφουγγάρι Menger, επίπεδο 1"></svg>
+      <p>Χώρισε κάθε ακμή σε <span class="hl p">3 ίσα κομμάτια</span>, οπότε ο κύβος γίνεται 27 κυβάκια. Βγάλε το κεντρικό και τα 6 στο κέντρο κάθε έδρας. Μένουν 20.</p>
+    </article>
+    <article class="step sC">
+      <div class="step-head"><span class="letter">C</span><h3>Επανάλαβε τον κανόνα</h3></div>
+      <svg class="iso" id="iso-c" role="img" aria-label="Σφουγγάρι Menger, επίπεδο 2"></svg>
+      <p>Κάνε το ίδιο σε <span class="hl o">καθένα από τα 20 κυβάκια</span>, ξανά και ξανά. Αυτό λέγεται <strong>αναδρομή</strong>.</p>
+    </article>
+  </div>
+</section>
+
+<section class="block b-orange" aria-labelledby="s4">
+  <div class="tab"><span class="num">4</span><h2 id="s4">Τα μαθηματικά πίσω από το σχέδιο</h2></div>
+  <p class="math-lead">Ξεκινάμε με έναν κύβο με ακμή <span class="hl y">27 μονάδες</span> και εξηγούμε <strong>γιατί</strong> ο κώδικας κάνει κάθε υπολογισμό.</p>
+  <div class="math-grid">
+    <article class="math-item m1"><h3><span class="q">1</span>Γιατί διαιρούμε με το 3;</h3>
+      <p>Θέλουμε κάθε ακμή να χωριστεί σε <strong>3 ίσα κομμάτια</strong>. Σε κάθε επίπεδο η ακμή των κυβακίων γίνεται τρεις φορές μικρότερη:</p>
+      <div class="fbox">27 ÷ 3 = 9 &nbsp;→&nbsp; 9 ÷ 3 = 3 &nbsp;→&nbsp; 3 ÷ 3 = 1</div>
+      <p><strong>Στον κώδικα:</strong> <code>small = size / 3</code>.</p>
+    </article>
+    <article class="math-item m2"><h3><span class="q">2</span>Γιατί γίνονται 27 κυβάκια;</h3>
+      <p>Στο μήκος, στο πλάτος και στο ύψος χωράνε από 3 κυβάκια:</p>
+      <div class="fbox blue">3 × 3 × 3 = 3³ = 27</div>
+      <p><strong>Στον κώδικα:</strong> τρία <code>for</code> το ένα μέσα στο άλλο, με <code>i</code>, <code>j</code>, <code>k</code> από 0 έως 2, περνούν και από τις 27 θέσεις.</p>
+    </article>
+    <article class="math-item m3"><h3><span class="q">3</span>Ποια 7 κυβάκια βγάζουμε;</h3>
+      <p>Βγάζουμε το <strong>κεντρικό</strong> κυβάκι και τα <strong>6</strong> που βρίσκονται στο κέντρο κάθε έδρας:</p>
+      <div class="fbox green">1 + 6 = 7 &nbsp;και&nbsp; 27 − 7 = 20</div>
+      <p>Πώς τα αναγνωρίζει η Python; Είναι ακριβώς τα κυβάκια που έχουν <strong>τουλάχιστον 2</strong> από τα <code>i</code>, <code>j</code>, <code>k</code> ίσα με 1, δηλαδή στη μεσαία θέση.</p>
+      <p><strong>Στον κώδικα:</strong> μετράμε τα <code>middle</code> και αν <code>middle &gt;= 2</code>, το κυβάκι παραλείπεται με <code>continue</code>.</p>
+    </article>
+    <article class="math-item m4"><h3><span class="q">4</span>Πόσα κυβάκια έχει κάθε επίπεδο;</h3>
+      <p>Κάθε κυβάκι γίνεται 20 μικρότερα, άρα κάθε επίπεδο πολλαπλασιάζει επί 20:</p>
+      <div class="table"><span class="th">Επίπεδο</span><span class="th">Κυβάκια</span><span class="th">Ακμή</span><span>0</span><span>1</span><span>27</span><span>1</span><span>20</span><span>9</span><span>2</span><span>20 × 20 = 400</span><span>3</span><span>3</span><span>400 × 20 = 8.000</span><span>1</span></div>
+      <p>Το <code>LEVEL</code> λέει στην Python πόσες φορές θα επαναλάβει τον κανόνα.</p>
+    </article>
+    <article class="math-item m5"><h3><span class="q">5</span>Τι γίνεται με τον όγκο;</h3>
+      <p>Σε κάθε βήμα κρατάμε 20 από τα 27 ίσα κομμάτια, δηλαδή τα <strong>20/27</strong> του όγκου:</p>
+      <div class="fbox pink">20/27 ≈ 0,74 &nbsp;→&nbsp; 400/729 ≈ 0,55 &nbsp;→&nbsp; 8.000/19.683 ≈ 0,41</div>
+      <p>Ο όγκος μικραίνει σε κάθε επίπεδο. Αν συνεχίζαμε για πάντα, θα πλησίαζε το <strong>μηδέν</strong>, ενώ οι τρύπες θα πλήθαιναν συνεχώς.</p>
+    </article>
+    <article class="math-item m6"><h3><span class="q">6</span>Πού μπαίνει κάθε κυβάκι;</h3>
+      <p>Κάθε κυβάκι έχει μια γωνία <code>(x, y, z)</code> και μια ακμή <code>size</code>. Το κυβάκι στη θέση <code>i</code> μετακινείται κατά <code>i × small</code>:</p>
+      <div class="fbox blue">x + i × small</div>
+      <p>Για <code>i = 0, 1, 2</code> παίρνουμε την αρχή, το πρώτο τρίτο και το δεύτερο τρίτο της ακμής, όπως ακριβώς στο 1/3 και τα 2/3 της χιονονιφάδας Koch.</p>
+    </article>
+  </div>
+  <div class="answer">Συμπέρασμα: <span>κάθε επίπεδο πολλαπλασιάζει τα κυβάκια επί 20, 1 → 20 → 400 → 8.000</span></div>
+  <div class="bridge"><strong>Από τα μαθηματικά στην Python</strong><p>Το <code>/ 3</code> μικραίνει την ακμή, τα τρία <code>for</code> περνούν από τις 27 θέσεις, ο έλεγχος <code>middle &gt;= 2</code> βγάζει τα 7 κυβάκια και η <code>menger</code> καλεί τον εαυτό της για καθένα από τα 20 που μένουν.</p></div>
+</section>
+
+<section class="block b-purple" aria-labelledby="s5">
+  <div class="tab"><span class="num">5</span><h2 id="s5">Γράψε και τρέξε Python</h2></div>
+  <p class="lab-guide">Οι γραμμές με <code>#</code> είναι σχόλια που εξηγούν κάθε εντολή. Ξεκίνα αλλάζοντας μόνο το <code>COLOR = "orange"</code> και το <code>LEVEL = 2</code>, και πάτησε <strong>«Εκτέλεση Python»</strong>.</p>
+  <div class="workspace">
+    <article class="panel p-code">
+      <div class="panel-head"><div><h3>Ο κώδικάς σου</h3><p>Python 3 στον browser, μέσω Pyodide</p></div><span class="tag">main.py</span></div>
+      <div class="editor-wrap"><pre id="highlight" aria-hidden="true" class="editor-highlight"><code id="highlightCode"></code></pre><textarea class="editor" id="code" spellcheck="false" aria-label="Επεξεργαστής κώδικα Python" wrap="off"></textarea></div>
+      <div class="actions"><button class="primary" id="run">▶ Εκτέλεση Python</button><button class="secondary" id="reset">↺ Αρχικός κώδικας</button><button class="secondary" id="copy">⧉ Αντιγραφή</button></div>
+      <div id="status" class="status" role="status" aria-live="polite">Το σφουγγάρι εμφανίζεται αμέσως. Για να τρέξει ο κώδικας Python που αλλάζεις, χρειάζεται σύνδεση στο διαδίκτυο.</div>
+    </article>
+    <article class="panel p-draw">
+      <div class="panel-head"><div><h3>Το fractal σου σε 3D</h3><p>Σύρε με το ποντίκι ή το δάχτυλο για να το γυρίσεις.</p></div><span class="tag" id="countBadge">400 κυβάκια</span></div>
+      <div class="viewer" id="viewer"><canvas id="canvas3d" tabindex="0" aria-label="Τρισδιάστατη προβολή του σφουγγαριού Menger. Με τα βέλη του πληκτρολογίου περιστρέφεται."></canvas><span class="hint">↻ Σύρε για περιστροφή</span><div class="fallback">Η τρισδιάστατη προβολή δεν είναι διαθέσιμη σε αυτή τη συσκευή ή χωρίς σύνδεση. Τα σχέδια στις ενότητες 1 και 3 δείχνουν το σφουγγάρι.</div></div>
+      <div class="view-actions"><button class="secondary" id="spin">⏸ Σταμάτα την περιστροφή</button><button class="secondary" id="resetView">⟲ Αρχική θέα</button></div>
+      <div class="controls"><div class="range-label"><label for="level">Επίπεδο επανάληψης</label><strong id="levelText">2</strong></div><input id="level" type="range" min="0" max="3" value="2"/><div class="mini-row"><span>0 · Ένας κύβος</span><span>3 · 8.000 κυβάκια</span></div></div>
+      <div class="callout">💡 Κάθε νέο επίπεδο πολλαπλασιάζει τα κυβάκια <strong>επί 20</strong>. Άλλαξε το επίπεδο ή τον κώδικα και δες τη διαφορά.</div>
+    </article>
+  </div>
+</section>
+
+<div class="next"><span class="go" aria-hidden="true">➜</span><p><b>Πρόκληση:</b> Πόσα κυβάκια θα είχε το επίπεδο 4; Υπολόγισέ το με το χέρι και μετά σκέψου γιατί η σελίδα σταματά στο επίπεδο 3.</p></div>
+
+<footer>Εκπαιδευτικό εργαστήριο για fractals, γεωμετρία και υπολογιστική σκέψη. Δεν χρειάζεται λογαριασμός.</footer>
+</main>
+<script>
+const initial = `# ΣΦΟΥΓΓΑΡΙ MENGER — ΧΤΙΖΩ ΕΝΑ 3D FRACTAL ΜΕ PYTHON
+# Οι γραμμές που αρχίζουν με # είναι σχόλια.
+# Εξηγούν τον κώδικα, αλλά η Python ΔΕΝ τις εκτελεί.
+
+# ΒΗΜΑ 1: Διαλέγουμε επίπεδο και χρώμα.
+# Δοκίμασε LEVEL = 0, 1, 2 ή 3.
+LEVEL = 2
+# Δοκίμασε "red", "blue", "green", "purple" ή "orange".
+COLOR = "orange"
+
+# ΒΗΜΑ 2: Ορίζουμε μια συνάρτηση με το def.
+# x, y, z = η γωνία του κύβου, size = η ακμή του,
+# level = πόσες φορές θα επαναλάβουμε τον κανόνα.
+def menger(x, y, z, size, level):
+    # Αν το επίπεδο είναι 0, κρατάμε τον κύβο όπως είναι.
+    if level == 0:
+        return [(x, y, z, size)]
+
+    # Γιατί / 3; Κάθε ακμή χωρίζεται σε 3 ίσα κομμάτια.
+    small = size / 3
+    # [] = άδεια λίστα για τα κυβάκια που θα κρατήσουμε.
+    cubes = []
+
+    # ΒΗΜΑ 3: Τρία for, ένα για κάθε διάσταση.
+    # Το i, j, k παίρνουν τις τιμές 0, 1, 2: 3 × 3 × 3 = 27 θέσεις.
+    for i in range(3):
+        for j in range(3):
+            for k in range(3):
+                # Μετράμε πόσες συντεταγμένες είναι στη μέση (= 1).
+                middle = 0
+                if i == 1:
+                    middle += 1
+                if j == 1:
+                    middle += 1
+                if k == 1:
+                    middle += 1
+                # 2 ή 3 στη μέση: κέντρο έδρας ή κέντρο κύβου.
+                # Αυτά είναι τα 7 κυβάκια που βγάζουμε.
+                if middle >= 2:
+                    continue
+
+                # ΒΗΜΑ 4: ΑΝΑΔΡΟΜΗ!
+                # Η menger καλεί τον εαυτό της για το μικρό κυβάκι.
+                # Το level - 1 μάς φέρνει πιο κοντά στο σταμάτημα (0).
+                cubes += menger(x + i * small,
+                                y + j * small,
+                                z + k * small,
+                                small, level - 1)
+    return cubes
+
+# ΒΗΜΑ 5: Ξεκινάμε από έναν κύβο με ακμή 1.
+cubes = menger(0, 0, 0, 1, LEVEL)
+
+# ΤΕΛΟΣ! Η ιστοσελίδα σχεδιάζει τα cubes με το COLOR.
+# ΠΕΙΡΑΜΑ: Άλλαξε COLOR = "purple" και LEVEL = 3.
+`;
+const MAX_CUBES = 8000;
+const $ = s => document.querySelector(s);
+const code=$('#code'),level=$('#level'),levelText=$('#levelText'),status=$('#status'),viewer=$('#viewer'),canvas=$('#canvas3d');
+code.value=initial;let currentColor='orange';
+
+// Χρωματισμός μόνο της οπτικής προεπισκόπησης. Το textarea παραμένει πραγματικά επεξεργάσιμο.
+const highlight=$('#highlight'),highlightCode=$('#highlightCode');
+function escapeHTML(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+function syntaxColor(source){
+  const token=/#.*|(?:\"(?:\\.|[^\"\\])*\"|'(?:\\.|[^'\\])*')|\b(?:def|return|if|for|in|from|import|else|elif|while|and|or|not|True|False|None|continue|break)\b|\b(?:range|print|len)\b|\b\d+(?:\.\d+)?\b|\b[a-zA-Z_][a-zA-Z_0-9]*(?=\s*\()/g;
+  let output='',last=0,match;
+  while((match=token.exec(source))!==null){
+    output+=escapeHTML(source.slice(last,match.index));const t=match[0];
+    let cls=t.startsWith('#')?'py-comment':/^[\"']/.test(t)?'py-string':/^(def|return|if|for|in|from|import|else|elif|while|and|or|not|True|False|None|continue|break)$/.test(t)?'py-keyword':/^\d/.test(t)?'py-number':/^(range|print|len)$/.test(t)?'py-builtin':'py-function';
+    output+='<span class="'+cls+'">'+escapeHTML(t)+'</span>';last=token.lastIndex;
+  }
+  return output+escapeHTML(source.slice(last))+'\n';
+}
+function updateHighlight(){highlightCode.innerHTML=syntaxColor(code.value);highlight.scrollTop=code.scrollTop;highlight.scrollLeft=code.scrollLeft}
+code.addEventListener('input',updateHighlight);
+code.addEventListener('scroll',()=>{highlight.scrollTop=code.scrollTop;highlight.scrollLeft=code.scrollLeft});
+code.addEventListener('keydown',e=>{if(e.key==='Tab'){e.preventDefault();const a=code.selectionStart,b=code.selectionEnd;code.setRangeText('    ',a,b,'end');updateHighlight()}});
+updateHighlight();
+
+// Ο ίδιος κανόνας με την Python, σε JavaScript, για άμεση προεπισκόπηση.
+function mengerJS(x,y,z,size,n){if(n===0)return [[x,y,z,size]];const s=size/3,out=[];for(let i=0;i<3;i++)for(let j=0;j<3;j++)for(let k=0;k<3;k++){if((i===1)+(j===1)+(k===1)>=2)continue;out.push(...mengerJS(x+i*s,y+j*s,z+k*s,s,n-1))}return out}
+
+// Ισομετρικά σχέδια (SVG) για τις ενότητες 1 και 3.
+function shade(hex,f){const n=parseInt(hex.slice(1),16);let r=n>>16,g=n>>8&255,b=n&255;const m=c=>Math.round(f>=1?c+(255-c)*(f-1):c*f);return 'rgb('+m(r)+','+m(g)+','+m(b)+')'}
+function isoSVG(svg,cubes,base){
+  const P=(x,y,z)=>[(x-y)*0.8660254,(x+y)*0.5-z];
+  const sorted=cubes.slice().sort((a,b)=>(a[0]+a[1]+a[2])-(b[0]+b[1]+b[2]));
+  const top=shade(base,1.35),right=shade(base,0.95),left=shade(base,0.72),edge=shade(base,0.5);
+  let minX=1e9,maxX=-1e9,minY=1e9,maxY=-1e9,parts=[];
+  const poly=(pts,fill)=>{for(const[px,py] of pts){minX=Math.min(minX,px);maxX=Math.max(maxX,px);minY=Math.min(minY,py);maxY=Math.max(maxY,py)}parts.push('<polygon points="'+pts.map(p=>p[0].toFixed(4)+','+p[1].toFixed(4)).join(' ')+'" fill="'+fill+'"/>')};
+  for(const[x,y,z,s] of sorted){
+    poly([P(x,y,z+s),P(x+s,y,z+s),P(x+s,y+s,z+s),P(x,y+s,z+s)],top);
+    poly([P(x+s,y,z),P(x+s,y+s,z),P(x+s,y+s,z+s),P(x+s,y,z+s)],right);
+    poly([P(x,y+s,z),P(x+s,y+s,z),P(x+s,y+s,z+s),P(x,y+s,z+s)],left);
+  }
+  const pad=0.06;svg.setAttribute('viewBox',(minX-pad)+' '+(minY-pad)+' '+(maxX-minX+2*pad)+' '+(maxY-minY+2*pad));
+  svg.innerHTML='<g stroke="'+edge+'" stroke-width="'+(0.0035+0.01*(cubes[0][3]))+'" stroke-linejoin="round">'+parts.join('')+'</g>';
+}
+isoSVG($('#iso-hero'),mengerJS(0,0,0,1,2),'#f08a1c');
+isoSVG($('#iso-a'),mengerJS(0,0,0,1,0),'#e0313b');
+isoSVG($('#iso-b'),mengerJS(0,0,0,1,1),'#e2508c');
+isoSVG($('#iso-c'),mengerJS(0,0,0,1,2),'#f08a1c');
+
+// Τρισδιάστατη προβολή με three.js.
+let three=null,cubes=mengerJS(0,0,0,1,2),spinning=!matchMedia('(prefers-reduced-motion: reduce)').matches;
+const DEFAULT_ROT={x:0.42,y:-0.62};
+function init3D(){
+  if(!window.THREE)return null;
+  try{
+    const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:true});
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
+    const scene=new THREE.Scene();
+    const camera=new THREE.PerspectiveCamera(32,1,0.1,100);camera.position.set(0,0,3.4);
+    scene.add(new THREE.HemisphereLight(0xffffff,0x6f7896,0.5));
+    const sun=new THREE.DirectionalLight(0xffffff,0.58);sun.position.set(2.5,3.5,4);scene.add(sun);
+    const group=new THREE.Group();group.rotation.set(DEFAULT_ROT.x,DEFAULT_ROT.y,0);scene.add(group);
+    return {renderer,scene,camera,group,mesh:null};
+  }catch(e){return null}
+}
+function resize3D(){if(!three)return;const r=viewer.getBoundingClientRect();three.renderer.setSize(r.width,r.height,false);three.camera.aspect=r.width/Math.max(1,r.height);three.camera.updateProjectionMatrix();render3D()}
+function render3D(){if(three)three.renderer.render(three.scene,three.camera)}
+function setCubes(list,color){
+  cubes=list;currentColor=color;
+  $('#countBadge').textContent=list.length.toLocaleString('el-GR')+(list.length===1?' κύβος':' κυβάκια');
+  if(!three)return;
+  if(three.mesh){three.group.remove(three.mesh);three.mesh.geometry.dispose();three.mesh.material.dispose();three.mesh=null}
+  if(!list.length){render3D();return}
+  let lo=[1e9,1e9,1e9],hi=[-1e9,-1e9,-1e9];
+  for(const[x,y,z,s] of list){lo=[Math.min(lo[0],x),Math.min(lo[1],y),Math.min(lo[2],z)];hi=[Math.max(hi[0],x+s),Math.max(hi[1],y+s),Math.max(hi[2],z+s)]}
+  const span=Math.max(hi[0]-lo[0],hi[1]-lo[1],hi[2]-lo[2],1e-9),k=1.0/span,c=[(lo[0]+hi[0])/2,(lo[1]+hi[1])/2,(lo[2]+hi[2])/2];
+  const mesh=new THREE.InstancedMesh(new THREE.BoxGeometry(1,1,1),new THREE.MeshLambertMaterial({color:new THREE.Color(color)}),list.length);
+  const m=new THREE.Matrix4();
+  list.forEach(([x,y,z,s],i)=>{const g=s*k*0.93;m.makeScale(g,g,g);m.setPosition((x+s/2-c[0])*k,(z+s/2-c[2])*k,-(y+s/2-c[1])*k);mesh.setMatrixAt(i,m)});
+  mesh.instanceMatrix.needsUpdate=true;three.group.add(mesh);three.mesh=mesh;render3D();
+}
+three=init3D();
+if(!three)viewer.classList.add('no-3d');
+else{new ResizeObserver(resize3D).observe(viewer);resize3D()}
+setCubes(cubes,currentColor);
+
+// Περιστροφή με σύρσιμο, πληκτρολόγιο και αργή αυτόματη κίνηση.
+let drag=null,lastFrame=0;
+function loop(t){if(!three)return;if(spinning&&!drag){const dt=lastFrame?Math.min(50,t-lastFrame):16;three.group.rotation.y+=dt*0.00035;render3D()}lastFrame=t;if(spinning)requestAnimationFrame(loop);else lastFrame=0}
+function setSpin(on){spinning=on;$('#spin').textContent=on?'⏸ Σταμάτα την περιστροφή':'▶ Περιστροφή';if(on&&three)requestAnimationFrame(loop)}
+setSpin(spinning);
+canvas.addEventListener('pointerdown',e=>{if(!three)return;drag={x:e.clientX,y:e.clientY};canvas.setPointerCapture(e.pointerId)});
+canvas.addEventListener('pointermove',e=>{if(!drag)return;const g=three.group;g.rotation.y+=(e.clientX-drag.x)*0.01;g.rotation.x=Math.max(-1.4,Math.min(1.4,g.rotation.x+(e.clientY-drag.y)*0.01));drag={x:e.clientX,y:e.clientY};render3D()});
+const endDrag=()=>{drag=null};canvas.addEventListener('pointerup',endDrag);canvas.addEventListener('pointercancel',endDrag);
+canvas.addEventListener('keydown',e=>{if(!three)return;const g=three.group,step=0.12;if(e.key==='ArrowLeft')g.rotation.y-=step;else if(e.key==='ArrowRight')g.rotation.y+=step;else if(e.key==='ArrowUp')g.rotation.x=Math.max(-1.4,g.rotation.x-step);else if(e.key==='ArrowDown')g.rotation.x=Math.min(1.4,g.rotation.x+step);else return;e.preventDefault();render3D()});
+$('#spin').addEventListener('click',()=>setSpin(!spinning));
+$('#resetView').addEventListener('click',()=>{if(!three)return;three.group.rotation.set(DEFAULT_ROT.x,DEFAULT_ROT.y,0);render3D()});
+
+function preview(n){levelText.textContent=n;setCubes(mengerJS(0,0,0,1,n),currentColor)}
+level.addEventListener('input',()=>{const n=Number(level.value);code.value=code.value.replace(/^LEVEL\s*=\s*\d+/m,'LEVEL = '+n);preview(n);updateHighlight();status.textContent='Προεπισκόπηση για επίπεδο '+n+'. Πάτησε «Εκτέλεση Python» για να τρέξει ο κώδικας.';status.className='status'});
+
+let pyodidePromise=null;
+function loadPython(){if(pyodidePromise)return pyodidePromise;status.textContent='Φόρτωση της Python… (μόνο την πρώτη φορά)';pyodidePromise=(async()=>{if(!window.loadPyodide){await new Promise((resolve,reject)=>{const s=document.createElement('script');s.src='https://cdn.jsdelivr.net/pyodide/v0.27.7/full/pyodide.js';s.onload=resolve;s.onerror=()=>reject(new Error('Δεν είναι διαθέσιμη η σύνδεση με την Python.'));document.head.appendChild(s)})}return await window.loadPyodide({indexURL:'https://cdn.jsdelivr.net/pyodide/v0.27.7/full/'})})();pyodidePromise.catch(()=>{pyodidePromise=null});return pyodidePromise}
+const COLOR_NAMES=/^(red|blue|green|purple|orange|pink|yellow|black|white|cyan|magenta|brown|navy|teal|gold|gray|grey)$/i;
+$('#run').addEventListener('click',async()=>{
+  const btn=$('#run');btn.disabled=true;status.className='status';
+  try{
+    const py=await loadPython();status.textContent='Εκτέλεση του κώδικα…';
+    const result=await py.runPythonAsync(code.value+'\nimport json\njson.dumps({"cubes": cubes, "color": COLOR, "level": LEVEL})');
+    const obj=JSON.parse(result);
+    if(!Array.isArray(obj.cubes))throw Error('Η μεταβλητή cubes πρέπει να είναι λίστα με κυβάκια.');
+    if(obj.cubes.length>MAX_CUBES)throw Error('Πάρα πολλά κυβάκια ('+obj.cubes.length.toLocaleString('el-GR')+'). Η σελίδα δείχνει έως 8.000, δηλαδή έως το επίπεδο 3.');
+    if(!obj.cubes.every(c=>Array.isArray(c)&&c.length===4&&c.every(Number.isFinite)&&c[3]>0))throw Error('Κάθε κυβάκι πρέπει να είναι (x, y, z, size) με θετικό size.');
+    if(typeof obj.color!=='string'||!COLOR_NAMES.test(obj.color))throw Error('Γράψε COLOR = "orange" ή ένα άλλο όνομα χρώματος στα αγγλικά, π.χ. red, blue, green, purple.');
+    setCubes(obj.cubes,obj.color.toLowerCase());
+    if(Number.isInteger(obj.level)&&obj.level>=0&&obj.level<=3){level.value=obj.level;levelText.textContent=obj.level}
+    status.textContent='✓ Ο κώδικας Python εκτελέστηκε! Δημιουργήθηκαν '+obj.cubes.length.toLocaleString('el-GR')+' κυβάκια.';status.className='status ok';
+  }catch(e){status.textContent='⚠ '+e.message;status.className='status error'}
+  finally{btn.disabled=false}
+});
+$('#reset').addEventListener('click',()=>{code.value=initial;level.value=2;levelText.textContent=2;setCubes(mengerJS(0,0,0,1,2),'orange');updateHighlight();status.textContent='Επαναφέρθηκε ο αρχικός κώδικας.';status.className='status'});
+$('#copy').addEventListener('click',async()=>{try{await navigator.clipboard.writeText(code.value);status.textContent='✓ Ο κώδικας αντιγράφηκε.';status.className='status ok'}catch{code.select();status.textContent='Επίλεξε τον κώδικα και πάτησε Ctrl+C.'}});
+</script></body></html>
