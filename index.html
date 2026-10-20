@@ -159,6 +159,19 @@ input[type=range]{width:100%;accent-color:var(--pink)}
 .lab-pager a{padding:8px 14px}
 .lab-pager .next-lab{margin-left:auto}
 
+/* Λύση της πρόκλησης (πτυσσόμενη) */
+.solution{margin-top:10px;border:2.5px dashed var(--purple);border-radius:14px 18px 15px 19px;background:#fff;padding:0 16px}
+.solution summary{cursor:pointer;list-style:none;padding:10px 0;font-weight:800;color:var(--purple);font-size:17px}
+.solution summary::-webkit-details-marker{display:none}
+.solution summary::before{content:"▸ "}
+.solution[open] summary::before{content:"▾ "}
+.solution summary small{font-weight:600;color:var(--muted);font-size:14px}
+.solution summary:focus-visible{outline:3px solid var(--pink);outline-offset:3px;border-radius:6px}
+.sol-body{padding:0 0 14px;font-size:16px}
+.sol-body p{margin:6px 0}
+.sol-body .fbox{margin:6px 0}
+.sol-body .final{display:inline-block;border:2.5px solid var(--red);background:#fff2f3;color:var(--red);font-weight:800;border-radius:10px 13px 11px 14px;padding:3px 12px;margin-top:6px}
+
 /* Κάτω λωρίδα */
 .next{margin-top:26px;display:flex;align-items:center;gap:14px;background:#f1ecff;border:3px solid var(--purple);border-radius:14px 20px 16px 18px;padding:10px 16px}
 .next .go{flex:none;display:grid;place-items:center;width:46px;height:38px;background:#ffe35c;border:2.5px solid #d4a800;border-radius:9px 12px 10px 13px;font-size:22px}
@@ -314,6 +327,14 @@ footer{text-align:center;color:var(--muted);font-size:14px;margin-top:22px}
 </section>
 
 <div class="next"><span class="go" aria-hidden="true">➜</span><p><b>Πρόκληση:</b> Πόσα κυβάκια θα είχε το επίπεδο 4; Υπολόγισέ το με το χέρι και μετά σκέψου γιατί η σελίδα σταματά στο επίπεδο 3.</p></div>
+<details class="solution"><summary>Δες τη λύση <small>(δοκίμασε πρώτα μόνος σου!)</small></summary>
+<div class="sol-body">
+<p><strong>Πόσα κυβάκια;</strong> Σε κάθε επίπεδο πολλαπλασιάζουμε επί 20:</p>
+<div class="fbox">1 → 20 → 400 → 8.000 → 8.000 × 20 = 160.000</div>
+<p>Με δυνάμεις: 20⁴ = 20 × 20 × 20 × 20 = 160.000. Η ακμή κάθε κυβακίου θα ήταν 27 ÷ 81 = 1/3 της μονάδας.</p>
+<p><strong>Γιατί η σελίδα σταματά στο επίπεδο 3;</strong> Το επίπεδο 4 έχει 20 φορές περισσότερα κυβάκια. Κάθε κυβάκι έχει 6 έδρες, άρα ο υπολογιστής θα έπρεπε να ζωγραφίζει 160.000 × 6 = 960.000 έδρες κάθε φορά που γυρίζει το σφουγγάρι. Πολλοί υπολογιστές θα «κολλούσαν», και η Python θα χρειαζόταν πολύ περισσότερο χρόνο για να φτιάξει τη λίστα.</p>
+<p class="final">Απάντηση: 160.000 κυβάκια, πάρα πολλά για να σχεδιαστούν γρήγορα</p>
+</div></details>
 
 <nav class="lab-pager" aria-label="Άλλα εργαστήρια"><a href="https://izzydi.github.io/koch-fractal/">← Προηγούμενο: Χιονονιφάδα Koch</a><a class="next-lab" href="https://izzydi.github.io/fractal-lab/sierpinski-triangle/">Επόμενο: Τρίγωνο Sierpinski →</a></nav>
 
